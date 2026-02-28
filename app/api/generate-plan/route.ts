@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
   try {
-    const { prompt } = await req.json();
+    const { goals } = await req.json();
 
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
@@ -15,20 +15,20 @@ export async function POST(req: Request) {
         "messages": [
           {
             "role": "system",
-            "content": "You are ScholarNexus AI, a professional academic tutor. Help the student understand complex topics with clarity and depth."
+            "content": "You are a professional study planner. The user will provide their study goals and timeline. Generate a detailed, step-by-step study plan to help them achieve these goals. Make the plan structured and actionable."
           },
           {
             "role": "user",
-            "content": prompt
+            "content": `My study goals are: ${goals}`
           }
         ]
       })
     });
 
     const data = await response.json();
-    return NextResponse.json({ answer: data.choices[0].message.content });
+    return NextResponse.json({ plan: data.choices[0].message.content });
   } catch (error) {
-    console.error("Tutor API Error:", error);
-    return NextResponse.json({ error: "Failed to reach the AI tutor." }, { status: 500 });
+    console.error("Planner API Error:", error);
+    return NextResponse.json({ error: "Failed to generate study plan." }, { status: 500 });
   }
 }

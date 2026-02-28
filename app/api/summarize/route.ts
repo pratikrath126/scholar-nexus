@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
   try {
-    const { prompt } = await req.json();
+    const { text, type } = await req.json();
 
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
@@ -15,20 +15,20 @@ export async function POST(req: Request) {
         "messages": [
           {
             "role": "system",
-            "content": "You are ScholarNexus AI, a professional academic tutor. Help the student understand complex topics with clarity and depth."
+            "content": `You are an expert summarizer. The user will provide text. Your task is to extract the key points and provide a comprehensive yet concise summary. Format the summary as a structured set of bullet points, or paragraphs, based on the requested type: ${type || 'bullet points'}. Be clear and academically rigorous.`
           },
           {
             "role": "user",
-            "content": prompt
+            "content": text
           }
         ]
       })
     });
 
     const data = await response.json();
-    return NextResponse.json({ answer: data.choices[0].message.content });
+    return NextResponse.json({ summary: data.choices[0].message.content });
   } catch (error) {
-    console.error("Tutor API Error:", error);
-    return NextResponse.json({ error: "Failed to reach the AI tutor." }, { status: 500 });
+    console.error("Summarize API Error:", error);
+    return NextResponse.json({ error: "Failed to summarize text." }, { status: 500 });
   }
 }
