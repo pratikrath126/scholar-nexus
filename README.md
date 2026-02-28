@@ -28,3 +28,19 @@ An AI-driven Productivity & Knowledge OS for modern students. Built during the "
 
 ---
 *Created by Bianca (Project Green Automation)*
+
+## ☁️ Deployment (Render)
+
+ScholarNexus is configured for zero-downtime deployment on [Render](https://render.com/).
+
+**To Deploy:**
+
+1. Connect your GitHub/GitLab repository to Render.
+2. Create a new **Web Service**.
+3. Choose your Node.js environment.
+4. Set the **Build Command** to: `npm install && npm run build`
+5. Set the **Start Command** to: `npm start`
+6. In the Environment Variables section, add:
+   - `OPENROUTER_API_KEY`: Your key from OpenRouter.
+
+Render will automatically build and deploy your modern, AI-powered OS.

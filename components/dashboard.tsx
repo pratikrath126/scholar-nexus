@@ -1,13 +1,16 @@
 "use client";
 
 import React from 'react';
+import Link from 'next/link';
 import { 
   TrendingUp, 
   Clock, 
   CheckCircle2, 
   ArrowRight,
   Bookmark,
-  Zap
+  Zap,
+  PenTool,
+  AlignLeft
 } from 'lucide-react';
 
 const stats = [
@@ -17,7 +20,7 @@ const stats = [
   { label: 'Brain Power', value: '84%', icon: TrendingUp, trend: '+5%' },
 ];
 
-export function Dashboard({ setView }: { setView: (view: string) => void }) {
+export function Dashboard() {
   return (
     <div className="flex-1 overflow-auto p-8 text-slate-900 bg-white">
       <header className="mb-10">
@@ -26,13 +29,15 @@ export function Dashboard({ setView }: { setView: (view: string) => void }) {
             <h1 className="text-3xl font-bold text-slate-900">Welcome back, Scholar</h1>
             <p className="text-slate-500 mt-1">Here&apos;s your academic overview for today.</p>
           </div>
-          <button 
-            onClick={() => setView('ai-tutor')}
-            className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-indigo-700 transition-colors shadow-sm"
-          >
-            <Zap className="w-4 h-4" />
-            AI Study Session
-          </button>
+          <div className="flex gap-4">
+            <Link
+              href="/ai-tutor"
+              className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-indigo-700 transition-colors shadow-sm"
+            >
+              <Zap className="w-4 h-4" />
+              AI Study Session
+            </Link>
+          </div>
         </div>
       </header>
 
@@ -61,13 +66,13 @@ export function Dashboard({ setView }: { setView: (view: string) => void }) {
           <div className="bg-white border rounded-xl overflow-hidden">
             <div className="p-6 border-b flex items-center justify-between">
               <h2 className="font-bold text-slate-900">Current Projects</h2>
-              <button className="text-sm text-indigo-600 font-medium flex items-center gap-1 hover:underline">
+              <Link href="/knowledge-base" className="text-sm text-indigo-600 font-medium flex items-center gap-1 hover:underline">
                 View all <ArrowRight className="w-3 h-3" />
-              </button>
+              </Link>
             </div>
             <div className="p-0">
               {[1, 2, 3].map((item) => (
-                <div key={item} className="p-6 flex items-center gap-4 hover:bg-slate-50 transition-colors border-b last:border-0 cursor-pointer" onClick={() => setView('knowledge-base')}>
+                <Link key={item} href="/knowledge-base" className="block p-6 flex items-center gap-4 hover:bg-slate-50 transition-colors border-b last:border-0 cursor-pointer">
                   <div className="w-12 h-12 rounded-lg bg-slate-100 flex items-center justify-center">
                     <Bookmark className="text-slate-400 w-6 h-6" />
                   </div>
@@ -78,31 +83,45 @@ export function Dashboard({ setView }: { setView: (view: string) => void }) {
                   <div className="w-32 h-2 bg-slate-100 rounded-full overflow-hidden">
                     <div className="h-full bg-indigo-600 rounded-full" style={{ width: `${100 - item * 20}%` }}></div>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           </div>
         </div>
 
         <div className="space-y-6">
-          <div className="bg-slate-900 text-white rounded-xl p-6 relative overflow-hidden h-full">
-            <div className="relative z-10">
-              <h2 className="font-bold text-lg mb-2">Nexus AI</h2>
-              <p className="text-slate-400 text-sm mb-6">Ask me anything about your current study material or let me generate a quiz.</p>
-              <div className="relative">
-                <input 
-                  type="text" 
-                  readOnly
-                  placeholder="Click to start session..." 
-                  onClick={() => setView('ai-tutor')}
-                  className="w-full bg-slate-800 border-none rounded-lg py-2 pl-4 pr-10 text-sm cursor-pointer hover:bg-slate-700 transition-colors"
-                />
-                <button className="absolute right-2 top-1/2 -translate-y-1/2 p-1 bg-indigo-600 rounded-md" onClick={() => setView('ai-tutor')}>
-                  <ArrowRight className="w-3 h-3 text-white" />
-                </button>
+          <div className="bg-slate-900 text-white rounded-xl p-6 relative overflow-hidden flex flex-col justify-between min-h-[250px]">
+            <div className="relative z-10 flex-1">
+              <h2 className="font-bold text-lg mb-2">Nexus AI Tools</h2>
+              <p className="text-slate-400 text-sm mb-6">Explore our suite of AI-powered study tools.</p>
+
+              <div className="space-y-3">
+                 <Link href="/ai-tutor" className="flex items-center justify-between bg-slate-800 hover:bg-slate-700 p-3 rounded-lg transition-colors cursor-pointer group">
+                   <div className="flex items-center gap-3">
+                     <Zap className="w-4 h-4 text-indigo-400" />
+                     <span className="text-sm font-medium">Ask Tutor</span>
+                   </div>
+                   <ArrowRight className="w-4 h-4 text-slate-500 group-hover:text-white transition-colors" />
+                 </Link>
+
+                 <Link href="/quiz" className="flex items-center justify-between bg-slate-800 hover:bg-slate-700 p-3 rounded-lg transition-colors cursor-pointer group">
+                   <div className="flex items-center gap-3">
+                     <PenTool className="w-4 h-4 text-emerald-400" />
+                     <span className="text-sm font-medium">Generate Quiz</span>
+                   </div>
+                   <ArrowRight className="w-4 h-4 text-slate-500 group-hover:text-white transition-colors" />
+                 </Link>
+
+                 <Link href="/summarizer" className="flex items-center justify-between bg-slate-800 hover:bg-slate-700 p-3 rounded-lg transition-colors cursor-pointer group">
+                   <div className="flex items-center gap-3">
+                     <AlignLeft className="w-4 h-4 text-amber-400" />
+                     <span className="text-sm font-medium">Summarize Text</span>
+                   </div>
+                   <ArrowRight className="w-4 h-4 text-slate-500 group-hover:text-white transition-colors" />
+                 </Link>
               </div>
             </div>
-            <div className="absolute -right-4 -top-4 w-24 h-24 bg-indigo-600/20 blur-3xl rounded-full"></div>
+            <div className="absolute -right-4 -top-4 w-32 h-32 bg-indigo-600/20 blur-3xl rounded-full"></div>
           </div>
         </div>
       </div>
