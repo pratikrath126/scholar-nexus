@@ -7,13 +7,25 @@ export default function Planner() {
   const [goals, setGoals] = useState('');
   const [plan, setPlan] = useState('');
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(true);
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-      const savedPlan = localStorage.getItem('scholar_plan');
-      const savedGoals = localStorage.getItem('scholar_goals');
-      if (savedPlan) setPlan(savedPlan);
-      if (savedGoals) setGoals(savedGoals);
+      const fetchPlan = async () => {
+          try {
+              const res = await fetch('/api/plans');
+              const data = await res.json();
+              if (res.ok && data.length > 0) {
+                  setPlan(data[0].content);
+                  setGoals(data[0].goals);
+              }
+          } catch (error) {
+              console.error("Failed to fetch plan:", error);
+          } finally {
+              setFetching(false);
+          }
+      };
+      fetchPlan();
   }, []);
 
   const generatePlan = async () => {
@@ -28,8 +40,7 @@ export default function Planner() {
       const data = await res.json();
       if (data.plan) {
         setPlan(data.plan);
-        localStorage.setItem('scholar_plan', data.plan);
-        localStorage.setItem('scholar_goals', goals);
+        await handleSave(data.plan, goals);
       }
     } catch (e) {
       console.error(e);
@@ -39,18 +50,38 @@ export default function Planner() {
     }
   };
 
-  const handleClear = () => {
-      setPlan('');
-      setGoals('');
-      localStorage.removeItem('scholar_plan');
-      localStorage.removeItem('scholar_goals');
+  const handleClear = async () => {
+      try {
+          await fetch('/api/plans', { method: 'DELETE' });
+          setPlan('');
+          setGoals('');
+      } catch (error) {
+          console.error("Failed to delete plan:", error);
+      }
   }
 
-  const handleSave = () => {
-      localStorage.setItem('scholar_plan', plan);
-      localStorage.setItem('scholar_goals', goals);
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
+  const handleSave = async (planContent = plan, planGoals = goals) => {
+      try {
+          const res = await fetch('/api/plans', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ content: planContent, goals: planGoals })
+          });
+          if (res.ok) {
+              setSaved(true);
+              setTimeout(() => setSaved(false), 2000);
+          }
+      } catch (error) {
+          console.error("Failed to save plan:", error);
+      }
+  }
+
+  if (fetching) {
+      return (
+          <div className="flex items-center justify-center h-full">
+              <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
+          </div>
+      );
   }
 
   return (
@@ -96,7 +127,7 @@ export default function Planner() {
                        <button onClick={handleClear} className="text-sm text-red-500 hover:text-red-600 flex items-center gap-1 font-medium bg-red-50 px-3 py-1.5 rounded-lg transition-colors border border-red-100">
                            <Trash2 className="w-4 h-4" /> Clear
                        </button>
-                       <button onClick={handleSave} className="text-sm text-indigo-600 hover:text-indigo-700 flex items-center gap-1 font-medium bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors border border-indigo-100">
+                       <button onClick={() => handleSave()} className="text-sm text-indigo-600 hover:text-indigo-700 flex items-center gap-1 font-medium bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors border border-indigo-100">
                            {saved ? <Check className="w-4 h-4" /> : <Save className="w-4 h-4" />}
                            {saved ? 'Saved' : 'Save Plan'}
                        </button>

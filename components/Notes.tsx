@@ -8,28 +8,52 @@ export default function Notes() {
   const [title, setTitle] = useState('New Study Note');
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-      const savedNotes = localStorage.getItem('scholar_notes');
-      if (savedNotes) {
-          const notes = JSON.parse(savedNotes);
-          if (notes.length > 0) {
-              setTitle(notes[0].title);
-              setContent(notes[0].content);
+      const fetchNotes = async () => {
+          try {
+              const res = await fetch('/api/notes');
+              const data = await res.json();
+              if (res.ok && data.length > 0) {
+                  setTitle(data[0].title);
+                  setContent(data[0].content);
+              }
+          } catch (error) {
+              console.error("Failed to fetch notes:", error);
+          } finally {
+              setLoading(false);
           }
-      }
+      };
+      fetchNotes();
   }, []);
 
-  const handleSave = () => {
+  const handleSave = async () => {
       setSaving(true);
-      setTimeout(() => {
-          const newNote = { id: Date.now(), title, content, date: new Date().toISOString() };
-          localStorage.setItem('scholar_notes', JSON.stringify([newNote]));
+      try {
+          const res = await fetch('/api/notes', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ title, content })
+          });
+          if (res.ok) {
+              setSaved(true);
+              setTimeout(() => setSaved(false), 2000);
+          }
+      } catch (error) {
+          console.error("Failed to save note:", error);
+      } finally {
           setSaving(false);
-          setSaved(true);
-          setTimeout(() => setSaved(false), 2000);
-      }, 500);
+      }
   };
+
+  if (loading) {
+      return (
+          <div className="flex items-center justify-center h-full bg-white dark:bg-slate-900 rounded-2xl shadow-inner border border-slate-200 dark:border-slate-800">
+              <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
+          </div>
+      );
+  }
 
   return (
     <div className="flex flex-col h-full bg-white dark:bg-slate-900 p-8 rounded-2xl shadow-inner border border-slate-200 dark:border-slate-800 relative">
