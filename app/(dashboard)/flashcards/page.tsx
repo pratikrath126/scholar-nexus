@@ -1,26 +1,37 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Zap, Save, Trash2, ChevronRight, ChevronLeft, Check } from 'lucide-react';
+import { Sparkles, Save, Trash2, ChevronRight, ChevronLeft, Check, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function Flashcards() {
   const [topic, setTopic] = useState('');
   const [flashcards, setFlashcards] = useState<{front: string, back: string}[]>([]);
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [savedDeck, setSavedDeck] = useState(false);
+  const [deckId, setDeckId] = useState<string | null>(null);
 
   useEffect(() => {
-      const savedCards = localStorage.getItem('scholar_flashcards');
-      const savedTopic = localStorage.getItem('scholar_flashcards_topic');
-      if (savedCards) {
+      const fetchDecks = async () => {
           try {
-              setFlashcards(JSON.parse(savedCards));
-              if (savedTopic) setTopic(savedTopic);
-          } catch(e) {}
-      }
+              const res = await fetch('/api/decks');
+              const data = await res.json();
+              if (res.ok && data.length > 0) {
+                  setFlashcards(data[0].cards);
+                  setTopic(data[0].topic);
+                  setDeckId(data[0].id);
+                  setSavedDeck(true);
+              }
+          } catch (error) {
+              console.error("Failed to fetch decks:", error);
+          } finally {
+              setFetching(false);
+          }
+      };
+      fetchDecks();
   }, []);
 
   const generateFlashcards = async () => {
@@ -38,6 +49,7 @@ export default function Flashcards() {
         setCurrentIndex(0);
         setIsFlipped(false);
         setSavedDeck(false);
+        setDeckId(null);
       } else {
         alert("Failed to parse flashcards");
       }
@@ -63,19 +75,44 @@ export default function Flashcards() {
     }, 150);
   };
 
-  const handleSaveDeck = () => {
-      localStorage.setItem('scholar_flashcards', JSON.stringify(flashcards));
-      localStorage.setItem('scholar_flashcards_topic', topic);
-      setSavedDeck(true);
-      setTimeout(() => setSavedDeck(false), 2000);
+  const handleSaveDeck = async () => {
+      try {
+          const res = await fetch('/api/decks', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ topic, flashcards })
+          });
+          const data = await res.json();
+          if (res.ok) {
+              setSavedDeck(true);
+              setDeckId(data.id);
+          }
+      } catch (error) {
+          console.error("Failed to save deck:", error);
+      }
   };
 
-  const handleDiscard = () => {
+  const handleDiscard = async () => {
+      if (deckId) {
+          try {
+              await fetch(`/api/decks/${deckId}`, { method: 'DELETE' });
+          } catch (error) {
+              console.error("Failed to delete deck:", error);
+          }
+      }
       setFlashcards([]);
-      localStorage.removeItem('scholar_flashcards');
-      localStorage.removeItem('scholar_flashcards_topic');
       setTopic('');
+      setDeckId(null);
+      setSavedDeck(false);
   };
+
+  if (fetching) {
+      return (
+          <div className="flex items-center justify-center h-full">
+              <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
+          </div>
+      );
+  }
 
   return (
     <div className="p-8 h-full flex flex-col max-w-4xl mx-auto">
@@ -85,7 +122,7 @@ export default function Flashcards() {
         <div className="flex-1 overflow-hidden bg-slate-50 dark:bg-slate-900/50 rounded-2xl border p-8 flex flex-col items-center justify-center">
             <div className="max-w-md w-full text-center space-y-6">
                 <div className="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Zap className="w-8 h-8" />
+                    <Sparkles className="w-8 h-8" />
                 </div>
                 <h2 className="text-2xl font-bold">Generate Flashcards from any Topic</h2>
                 <p className="text-slate-500">Enter a topic, concept, or paste a brief note, and our AI will generate targeted flashcards for you.</p>
@@ -117,7 +154,7 @@ export default function Flashcards() {
                      <button onClick={handleDiscard} className="text-sm text-red-500 hover:text-red-600 flex items-center gap-1 font-medium bg-red-50 px-3 py-1.5 rounded-lg border border-red-100">
                          <Trash2 className="w-4 h-4" /> Discard
                      </button>
-                     <button onClick={handleSaveDeck} className="text-sm text-indigo-600 hover:text-indigo-700 flex items-center gap-1 font-medium bg-indigo-50 px-3 py-1.5 rounded-lg border border-indigo-100">
+                     <button onClick={handleSaveDeck} disabled={savedDeck} className="text-sm text-indigo-600 hover:text-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1 font-medium bg-indigo-50 px-3 py-1.5 rounded-lg border border-indigo-100">
                          {savedDeck ? <Check className="w-4 h-4" /> : <Save className="w-4 h-4" />}
                          {savedDeck ? 'Saved' : 'Save Deck'}
                      </button>

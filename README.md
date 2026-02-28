@@ -44,3 +44,9 @@ ScholarNexus is configured for zero-downtime deployment on [Render](https://rend
    - `OPENROUTER_API_KEY`: Your key from OpenRouter.
 
 Render will automatically build and deploy your modern, AI-powered OS.
+
+### Important Note on Deployment Environment Variables:
+Make sure to also include the following variables in Render's environment settings:
+- `DATABASE_URL`: Your Neon PostgreSQL connection string.
+- `NEXTAUTH_SECRET`: A secure random string for JWT encryption.
+- `NEXTAUTH_URL`: The production URL of your Render app.
